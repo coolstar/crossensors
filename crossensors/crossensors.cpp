@@ -316,7 +316,6 @@ OnPrepareHardware(
 
 	pDevice->SensorCount = resp.dump.sensor_count;
 
-	DbgPrint("Sensor Count: %d\n", pDevice->SensorCount);
 	pDevice->LidSensor = -1;
 	for (int i = 0; i < pDevice->SensorCount; i++) {
 		params = { 0 };
@@ -327,7 +326,6 @@ OnPrepareHardware(
 		if (!NT_SUCCESS(status)) {
 			return status;
 		}
-		DbgPrint("Sensor %d type: %d, location %d\n", i, resp.info.type, resp.info.location);
 		if (resp.info.type == MOTIONSENSE_TYPE_ACCEL &&
 			resp.info.location == MOTIONSENSE_LOC_LID) {
 			pDevice->LidSensor = i;
@@ -1330,7 +1328,6 @@ CrosSensorsSetFeature(
 			switch (transferPacket->reportId)
 			{
 			case REPORTID_ACCELEROMETER:
-				DbgPrint("Accelerometer Feature Report Write!\n");
 				break;
 			default:
 

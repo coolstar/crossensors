@@ -81,7 +81,7 @@ typedef struct _CROSSENSORS_FEATURE_REPORT
 	BYTE	  ConnectionType;
 	BYTE	  ReportingState;
 	BYTE	  SensorState;
-	UINT32	  ReportInterval;
+	UINT16	  ReportInterval;
 	UINT16    SensorDateMotionAccelerationModChangeSensitivityAbs;
 	INT16	  SensorDateMotionAccelerationModMax;
 	INT16	  SensorDateMotionAccelerationModMin;

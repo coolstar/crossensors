@@ -53,12 +53,13 @@ typedef UCHAR HID_REPORT_DESCRIPTOR, *PHID_REPORT_DESCRIPTOR;
 #ifdef DESCRIPTOR_DEF
 HID_REPORT_DESCRIPTOR DefaultReportDescriptor[] = {
 	0x05, 0x20,                          // USAGE_PAGE (Sensors)
-	0x09, 0x73,                          // USAGE (Sensor Type Accelerometer 3D)
-	0xa1, 0x01,                          // COLLECTION (Application)
+	0x09, 0x01,                          // USAGE (Sensor Collection v2)
+	0xa1, 0x00,                          // COLLECTION (Physical)
 	0x85, REPORTID_ACCELEROMETER,        //   REPORT_ID (Accelerometer)
+	0x05, 0x20,                          //	  USAGE_PAGE (Sensors)
+	0x09, 0x73,                          //   USAGE (Sensor Type Accelerometer 3D)
 	0xa1, 0x00,                          //   COLLECTION (Physical)
-	0x05, 0x20,                          //		USAGE_PAGE (Sensors)
-
+	0x05, 0x20,                          //	    USAGE_PAGE (Sensors)
 	0x0a, 0x09, 0x03,                    //		USAGE (Sensor Connection Type)
 	0x15, 0x00,                          //		LOGICAL_MINIMUM (0)
 	0x25, 0x02,							 //		LOGICAL_MAXIMUM (2)
@@ -104,11 +105,10 @@ HID_REPORT_DESCRIPTOR DefaultReportDescriptor[] = {
 
 	0x0a, 0x0e, 0x03,					 //		USAGE (Sensor Property Report Interval)
 	0x15, 0x00,                          //		LOGICAL_MINIMUM (0)
-	0x27, 0xFF, 0xFF, 0xFF, 0xFF,		 //		LOGICAL_MAXIMUM (4294967295)
-	0x75, 0x20,                          //		REPORT_SIZE  (32) - bits
+	0x26, 0xFF, 0xFF,					 //		LOGICAL_MAXIMUM (-1)
+	0x75, 0x10,                          //		REPORT_SIZE  (16) - bits
 	0x95, 0x01,                          //		REPORT_COUNT (1)  - Bytes
-	0x66, 0x01, 0x10,					 //		UNIT (1 Second)
-	0x55, 0x0d,							 //		UNIT_EXPONENT (-3)
+	0x55, 0x00,							 //		UNIT_EXPONENT (-3)
 	0xb1, 0x02,                          //		FEATURE (Data,Var,Abs)
 
 	0x55, 0x00,							 //		UNIT_EXPONENT (0)
@@ -140,7 +140,7 @@ HID_REPORT_DESCRIPTOR DefaultReportDescriptor[] = {
 	0x55, 0x0C,                          //		UNIT Exponent (-4)
 	0xb1, 0x02,                          //		FEATURE (Data,Var,Abs)
 
-	0x05, 0x20,                          //		USAGE_PAGE (Sensors)
+	0x05, 0x20,                          //		USAGE_PAGE (0x20 - Sensors)
 
 	0x0A, 0x01, 0x02,                    //		USAGE (Sensor State)
 	0x55, 0x00,							 //		UNIT_EXPONENT (0)
@@ -202,7 +202,6 @@ HID_REPORT_DESCRIPTOR DefaultReportDescriptor[] = {
 	0x55, 0x0C,                          //		UNIT Exponent (-4)
 	0x81, 0x02,                          //		INPUT (Data,Var,Abs)
 	0xc0,                                //   END_COLLECTION
-
 	0xc0,                                // END_COLLECTION
 };
 
