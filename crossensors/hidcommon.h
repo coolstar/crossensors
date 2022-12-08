@@ -1,0 +1,107 @@
+#if !defined(_CROSSENSORS_COMMON_H_)
+#define _CROSSENSORS_COMMON_H_
+
+//
+//These are the device attributes returned by vmulti in response
+// to IOCTL_HID_GET_DEVICE_ATTRIBUTES.
+//
+
+#define CROSSENSORS_PID              0x0003
+#define CROSSENSORS_VID              0x18D1
+#define CROSSENSORS_VERSION          0x0001
+
+//
+// These are the report ids
+//
+
+#define REPORTID_ACCELEROMETER       0x01
+
+//
+// Feature report infomation
+//
+
+#define DEVICE_MODE_MOUSE        0x00
+#define DEVICE_MODE_SINGLE_INPUT 0x01
+#define DEVICE_MODE_MULTI_INPUT  0x02
+
+enum Sensor_Property_Sensor_Connection_Type
+{
+    SENSOR_PROPERTY_CONNECTION_TYPE_PC_INTEGRATED_SEL = 1,
+    SENSOR_PROPERTY_CONNECTION_TYPE_PC_ATTACHED_SEL = 2,
+    SENSOR_PROPERTY_CONNECTION_TYPE_PC_EXTERNAL_SEL = 3,
+};
+
+enum Sensor_Property_Reporting_State
+{
+    SENSOR_PROPERTY_REPORTING_STATE_NO_EVENTS_SEL = 1,
+    SENSOR_PROPERTY_REPORTING_STATE_ALL_EVENTS_SEL = 2,
+    SENSOR_PROPERTY_REPORTING_STATE_THRESHOLD_EVENTS_SEL = 3,
+    SENSOR_PROPERTY_REPORTING_STATE_NO_EVENTS_WAKE_SEL = 4,
+    SENSOR_PROPERTY_REPORTING_STATE_ALL_EVENTS_WAKE_SEL = 5,
+    SENSOR_PROPERTY_REPORTING_STATE_THRESHOLD_EVENTS_WAKE_SEL = 6,
+};
+
+enum Sensor_Property_Power_State
+{
+    SENSOR_PROPERTY_POWER_STATE_UNDEFINED_SEL = 1,
+    SENSOR_PROPERTY_POWER_STATE_D0_FULL_POWER_SEL = 2,
+    SENSOR_PROPERTY_POWER_STATE_D1_LOW_POWER_SEL = 3,
+    SENSOR_PROPERTY_POWER_STATE_D2_STANDBY_WITH_WAKE_SEL = 4,
+    SENSOR_PROPERTY_POWER_STATE_D3_SLEEP_WITH_WAKE_SEL = 5,
+    SENSOR_PROPERTY_POWER_STATE_D4_POWER_OFF_SEL = 6,
+};
+
+enum Sensor_State
+{
+    SENSOR_STATE_UNKNOWN_SEL = 1,
+    SENSOR_STATE_READY_SEL = 2,
+    SENSOR_STATE_NOT_AVAILABLE_SEL = 3,
+    SENSOR_STATE_NO_DATA_SEL = 4,
+    SENSOR_STATE_INITIALIZING_SEL = 5,
+    SENSOR_STATE_ACCESS_DENIED_SEL = 6,
+    SENSOR_STATE_ERROR_SEL = 7,
+};
+
+enum Sensor_Event
+{
+    SENSOR_EVENT_UNKNOWN_SEL = 1,
+    SENSOR_EVENT_STATE_CHANGED_SEL = 2,
+    SENSOR_EVENT_PROPERTY_CHANGED_SEL = 3,
+    SENSOR_EVENT_DATA_UPDATED_SEL = 4,
+    SENSOR_EVENT_POLL_RESPONSE_SEL = 5,
+    SENSOR_EVENT_CHANGE_SENSITIVITY_SEL = 6,
+};
+
+#pragma pack(1)
+typedef struct _CROSSENSORS_FEATURE_REPORT
+{
+
+	BYTE      ReportID;
+
+	BYTE	  ConnectionType;
+	BYTE	  ReportingState;
+	BYTE	  SensorState;
+	UINT32	  ReportInterval;
+	UINT16    SensorDateMotionAccelerationModChangeSensitivityAbs;
+	INT16	  SensorDateMotionAccelerationModMax;
+	INT16	  SensorDateMotionAccelerationModMin;
+} CrosSensorsFeatureReport;
+#pragma pack()
+
+#pragma pack(1)
+typedef struct _CROSSENSORS_ACCEL_REPORT
+{
+
+	BYTE        ReportID;
+	BYTE		SensorState;
+	BYTE		SensorEvent;
+
+	INT16		X;
+	INT16		Y;
+	INT16		Z;
+
+} CrosSensorsAccelReport;
+#pragma pack()
+
+#endif
+#pragma once
