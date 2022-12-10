@@ -1399,7 +1399,7 @@ CrosSensorsGetFeature(
 					pReport->ConnectionType = SENSOR_PROPERTY_CONNECTION_TYPE_PC_INTEGRATED_SEL;
 					pReport->ReportingState = SENSOR_PROPERTY_REPORTING_STATE_ALL_EVENTS_SEL;
 					pReport->SensorState = SENSOR_STATE_READY_SEL;
-					pReport->ReportInterval = 10;
+					pReport->ReportInterval = 1;
 					pReport->SensorDateMotionAccelerationModChangeSensitivityAbs = 1;
 					pReport->SensorDateMotionAccelerationModMax = 32767;
 					pReport->SensorDateMotionAccelerationModMin = -32767;
