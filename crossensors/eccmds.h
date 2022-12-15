@@ -6,6 +6,20 @@
 /* Command version mask */
 #define EC_VER_MASK(version) (1UL << (version))
 
+#define EC_MEMMAP_ACC_STATUS       0x90 /* Accelerometer status (8 bits )*/
+/* Unused 0x91 */
+#define EC_MEMMAP_ACC_DATA         0x92 /* Accelerometers data 0x92 - 0x9f */
+/* 0x92: Lid Angle if available, LID_ANGLE_UNRELIABLE otherwise */
+/* 0x94 - 0x99: 1st Accelerometer */
+/* 0x9a - 0x9f: 2nd Accelerometer */
+#define EC_MEMMAP_GYRO_DATA        0xa0 /* Gyroscope data 0xa0 - 0xa5 */
+/* Unused 0xa6 - 0xdf */
+
+/* Define the format of the accelerometer mapped memory status byte. */
+#define EC_MEMMAP_ACC_STATUS_SAMPLE_ID_MASK  0x0f
+#define EC_MEMMAP_ACC_STATUS_BUSY_BIT        BIT(4)
+#define EC_MEMMAP_ACC_STATUS_PRESENCE_BIT    BIT(7)
+
 #define EC_FEATURE_MOTION_SENSE 6
 
 /*****************************************************************************/

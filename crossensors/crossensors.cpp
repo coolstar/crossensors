@@ -96,7 +96,7 @@ NTSTATUS ConnectToEc(
 	}
 
 	status = WdfIoTargetQueryForInterface(pDevice->busIoTarget,
-		&GUID_CROSEC_INTERFACE_STANDARD,
+		&GUID_CROSEC_INTERFACE_STANDARD_V2,
 		(PINTERFACE)&CrosEcInterface,
 		sizeof(CrosEcInterface),
 		2,
@@ -197,44 +197,119 @@ BOOLEAN cros_ec_cmd_version_supported(PCROSSENSORS_CONTEXT pDevice, int cmd, int
 	return (mask & EC_VER_MASK(ver)) ? true : false;
 }
 
+static int cros_ec_sensors_cmd_read_u8(PCROSSENSORS_CONTEXT pDevice,
+	unsigned int offset, UINT8* dest)
+{
+	return (*pDevice->CrosEcReadMem)(pDevice->CrosEcBusContext, offset, 1, dest);
+}
+
+static int cros_ec_sensors_cmd_read_u16(PCROSSENSORS_CONTEXT pDevice,
+	unsigned int offset, UINT16* dest)
+{
+	UINT16 tmp;
+	int ret = (*pDevice->CrosEcReadMem)(pDevice->CrosEcBusContext, offset, 2, &tmp);
+
+	if (ret >= 0)
+		*dest = tmp;
+
+	return ret;
+}
+
+static int cros_ec_sensors_read_until_not_busy(PCROSSENSORS_CONTEXT pDevice)
+{
+	UINT8 status;
+	int ret, attempts = 0;
+
+	ret = cros_ec_sensors_cmd_read_u8(pDevice, EC_MEMMAP_ACC_STATUS, &status);
+	if (ret < 0)
+		return ret;
+
+	while (status & EC_MEMMAP_ACC_STATUS_BUSY_BIT) {
+		/* Give up after enough attempts, return error. */
+		if (attempts++ >= 50)
+			return STATUS_IO_TIMEOUT;
+
+		/* Small delay every so often. */
+		if (attempts % 5 == 0) {
+			LARGE_INTEGER Interval;
+			Interval.QuadPart = -10 * 1000 * 25;
+			KeDelayExecutionThread(KernelMode, false, &Interval); //msleep(25)
+		}
+
+		ret = cros_ec_sensors_cmd_read_u8(pDevice, EC_MEMMAP_ACC_STATUS,
+			&status);
+		if (ret < 0)
+			return ret;
+	}
+
+	return status;
+}
+
+int read_lpc_sensor(PCROSSENSORS_CONTEXT pDevice, int sensorNum, UINT16 *data) {
+	UINT8 samp_id = 0xff, status = 0;
+	int ret, attempts = 0;
+
+	/*
+	 * Continually read all data from EC until the status byte after
+	 * all reads reflects that the EC is not busy and the sample id
+	 * matches the sample id from before all reads. This guarantees
+	 * that data read in was not modified by the EC while reading.
+	 */
+	while ((status & (EC_MEMMAP_ACC_STATUS_BUSY_BIT |
+		EC_MEMMAP_ACC_STATUS_SAMPLE_ID_MASK)) != samp_id) {
+		/* If we have tried to read too many times, return error. */
+		if (attempts++ >= 5)
+			return STATUS_IO_TIMEOUT;
+
+		/* Read status byte until EC is not busy. */
+		ret = cros_ec_sensors_read_until_not_busy(pDevice);
+		if (ret < 0)
+			return ret;
+
+		/*
+		 * Store the current sample id so that we can compare to the
+		 * sample id after reading the data.
+		 */
+		samp_id = ret & EC_MEMMAP_ACC_STATUS_SAMPLE_ID_MASK;
+
+		/* Read all EC data, format it, and store it into data. */
+
+
+		ret = pDevice->CrosEcReadMem(pDevice->CrosEcBusContext,
+			EC_MEMMAP_ACC_DATA + 2 + (sensorNum * 6), 6,
+			data);
+		if (ret < 0)
+			return ret;
+
+		/* Read status byte. */
+		ret = cros_ec_sensors_cmd_read_u8(pDevice, EC_MEMMAP_ACC_STATUS,
+			&status);
+		if (ret < 0)
+			return ret;
+	}
+
+	return 0;
+}
+
 void SensorWorkItem(
 	IN WDFWORKITEM WorkItem
 ) {
 	WDFDEVICE Device = (WDFDEVICE)WdfWorkItemGetParentObject(WorkItem);
 	PCROSSENSORS_CONTEXT pDevice = GetDeviceContext(Device);
-	/*for (int i = 0; i < pDevice->SensorCount; i++) {
-		ec_params_motion_sense params = { 0 };
-		ec_response_motion_sense resp;
-		NTSTATUS status;
-
-		params.cmd = MOTIONSENSE_CMD_DATA;
-		params.info.sensor_num = i;
-		status = send_ec_command(pDevice, EC_CMD_MOTION_SENSE_CMD, 1, (UINT8*)&params, sizeof(params), (UINT8*)&resp, sizeof(resp));
-		if (!NT_SUCCESS(status)) {
-			return;
-		}
-		DbgPrint("Sensor %d data: %d %d %d\n", i, resp.data.data[0], resp.data.data[1], resp.data.data[2]);
-	}*/
 
 	if (pDevice->LidSensor != -1) {
-		ec_params_motion_sense params = { 0 };
-		ec_response_motion_sense resp;
+		UINT16 data[3] = { 0 };
 		NTSTATUS status;
 
-		params.cmd = MOTIONSENSE_CMD_DATA;
-		params.info.sensor_num = pDevice->LidSensor;
-		status = send_ec_command(pDevice, EC_CMD_MOTION_SENSE_CMD, 1, (UINT8*)&params, sizeof(params), (UINT8*)&resp, sizeof(resp));
-		if (!NT_SUCCESS(status)) {
-			return;
-		}
+		int ret = read_lpc_sensor(pDevice, pDevice->LidSensor, data);
 
 		CrosSensorsAccelReport report;
 		report.ReportID = REPORTID_ACCELEROMETER;
 		report.SensorState = SENSOR_STATE_READY_SEL; //Ready
 		report.SensorEvent = SENSOR_EVENT_DATA_UPDATED_SEL; //Data Updated
-		report.X = resp.data.data[0] * -1;
-		report.Y = resp.data.data[1] * -1;
-		report.Z = resp.data.data[2] * -1;
+		report.X = data[0] * -1;
+		report.Y = data[1] * -1;
+		report.Z = data[2] * -1;
 
 		size_t BytesWritten;
 		CrosSensorsProcessVendorReport(pDevice, &report, sizeof(report), &BytesWritten);
