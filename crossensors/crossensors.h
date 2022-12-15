@@ -249,20 +249,24 @@ BOOLEAN
 	IN INT Feature
 	);
 
+typedef
+INT
+(*PCROSEC_READ_MEM) (
+	IN PVOID Context,
+	IN INT offset,
+	IN INT bytes,
+	OUT PVOID dest
+	);
+
 DEFINE_GUID(GUID_CROSEC_INTERFACE_STANDARD,
 	0xd7062676, 0xe3a4, 0x11ec, 0xa6, 0xc4, 0x24, 0x4b, 0xfe, 0x99, 0x46, 0xd0);
 
-/*DEFINE_GUID(GUID_DEVICE_PROPERTIES,
-	0xdaffd814, 0x6eba, 0x4d8c, 0x8a, 0x91, 0xbc, 0x9b, 0xbf, 0x4a, 0xa3, 0x01);*/ //Windows defender false positive
-
-	//
-	// Interface for getting and setting power level etc.,
-	//
-typedef struct _CROSEC_INTERFACE_STANDARD {
+typedef struct _CROSEC_INTERFACE_STANDARD_V2 {
 	INTERFACE                        InterfaceHeader;
 	PCROSEC_CMD_XFER_STATUS          CmdXferStatus;
 	PCROSEC_CHECK_FEATURES           CheckFeatures;
-} CROSEC_INTERFACE_STANDARD, * PCROSEC_INTERFACE_STANDARD;
+	PCROSEC_READ_MEM                 ReadEcMem;
+} CROSEC_INTERFACE_STANDARD_V2, * PCROSEC_INTERFACE_STANDARD_V2;
 
 typedef struct _CROSSENSORS_CONTEXT
 {
@@ -275,7 +279,8 @@ typedef struct _CROSSENSORS_CONTEXT
 	PVOID CrosEcBusContext;
 
 	PCROSEC_CMD_XFER_STATUS CrosEcCmdXferStatus;
-	PCROSEC_CHECK_FEATURES CrosEcCheckFeatures;
+	PCROSEC_CHECK_FEATURES  CrosEcCheckFeatures;
+	PCROSEC_READ_MEM	    CrosEcReadMem;
 
 	WDFTIMER Timer;
 	int SensorCount;

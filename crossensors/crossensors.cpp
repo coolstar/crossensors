@@ -80,7 +80,7 @@ NTSTATUS ConnectToEc(
 	openParams.CreateDisposition = FILE_OPEN;
 	openParams.FileAttributes = FILE_ATTRIBUTE_NORMAL;
 
-	CROSEC_INTERFACE_STANDARD CrosEcInterface;
+	CROSEC_INTERFACE_STANDARD_V2 CrosEcInterface;
 	RtlZeroMemory(&CrosEcInterface, sizeof(CrosEcInterface));
 
 	status = WdfIoTargetOpen(pDevice->busIoTarget, &openParams);
@@ -99,7 +99,7 @@ NTSTATUS ConnectToEc(
 		&GUID_CROSEC_INTERFACE_STANDARD,
 		(PINTERFACE)&CrosEcInterface,
 		sizeof(CrosEcInterface),
-		1,
+		2,
 		NULL);
 	WdfIoTargetClose(pDevice->busIoTarget);
 	pDevice->busIoTarget = NULL;
@@ -112,6 +112,7 @@ NTSTATUS ConnectToEc(
 	pDevice->CrosEcBusContext = CrosEcInterface.InterfaceHeader.Context;
 	pDevice->CrosEcCmdXferStatus = CrosEcInterface.CmdXferStatus;
 	pDevice->CrosEcCheckFeatures = CrosEcInterface.CheckFeatures;
+	pDevice->CrosEcReadMem = CrosEcInterface.ReadEcMem;
 	return status;
 }
 
