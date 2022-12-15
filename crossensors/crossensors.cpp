@@ -513,6 +513,14 @@ CrosSensorsEvtDeviceAdd(
 		return status;
 	}
 
+	{
+		WDF_DEVICE_STATE deviceState;
+		WDF_DEVICE_STATE_INIT(&deviceState);
+
+		deviceState.NotDisableable = WdfFalse;
+		WdfDeviceSetDeviceState(device, &deviceState);
+	}
+
 	WDF_IO_QUEUE_CONFIG_INIT_DEFAULT_QUEUE(&queueConfig, WdfIoQueueDispatchParallel);
 
 	queueConfig.EvtIoInternalDeviceControl = CrosSensorsEvtInternalDeviceControl;
