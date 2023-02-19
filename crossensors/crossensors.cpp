@@ -645,6 +645,8 @@ CrosSensorsEvtDeviceAdd(
 
 	WDF_TIMER_CONFIG_INIT_PERIODIC(&timerConfig, SensorTimerFunc, 10);
 
+	timerConfig.TolerableDelay = TolerableDelayUnlimited; //Don't wake from S0ix
+
 	WDF_OBJECT_ATTRIBUTES_INIT(&attributes);
 	attributes.ParentObject = device;
 	status = WdfTimerCreate(&timerConfig, &attributes, &hTimer);
