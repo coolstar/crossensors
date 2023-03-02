@@ -20,10 +20,6 @@
 // Feature report infomation
 //
 
-#define DEVICE_MODE_MOUSE        0x00
-#define DEVICE_MODE_SINGLE_INPUT 0x01
-#define DEVICE_MODE_MULTI_INPUT  0x02
-
 enum Sensor_Property_Sensor_Connection_Type
 {
     SENSOR_PROPERTY_CONNECTION_TYPE_PC_INTEGRATED_SEL = 1,

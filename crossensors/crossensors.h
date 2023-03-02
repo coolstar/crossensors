@@ -258,6 +258,20 @@ INT
 	OUT PVOID dest
 	);
 
+typedef enum {
+	CSVivaldiRequestUpdateTabletMode = 0x102
+} CSVivaldiRequest;
+
+typedef struct CSVivaldiSettingsArg {
+	UINT32 argSz;
+	CSVivaldiRequest settingsRequest;
+	union args {
+		struct {
+			UINT8 tabletmode;
+		} tabletmode;
+	} args;
+} CSVivaldiSettingsArg, * PCSVivaldiSettingsArg;
+
 DEFINE_GUID(GUID_CROSEC_INTERFACE_STANDARD_V2,
 	0xad8649fa, 0x7c71, 0x11ed, 0xb6, 0x3c, 0x00, 0x15, 0x5d, 0xa4, 0x49, 0xad);
 
@@ -274,7 +288,9 @@ typedef struct _CROSSENSORS_CONTEXT
 
 	WDFQUEUE ReportQueue;
 
-	BYTE DeviceMode;
+	BYTE TabletMode;
+	PCALLBACK_OBJECT CSTabletModeCallback;
+	INT callbackUpdateCnt;
 
 	PVOID CrosEcBusContext;
 

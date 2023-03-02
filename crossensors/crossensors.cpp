@@ -291,6 +291,82 @@ int read_lpc_sensor(PCROSSENSORS_CONTEXT pDevice, int sensorNum, UINT16 *data) {
 	return 0;
 }
 
+NTSTATUS
+GetDeviceTabletModeState(
+	_In_ WDFDEVICE FxDevice
+)
+{
+	NTSTATUS status = STATUS_ACPI_NOT_INITIALIZED;
+	ACPI_EVAL_INPUT_BUFFER_EX inputBuffer;
+	RtlZeroMemory(&inputBuffer, sizeof(inputBuffer));
+
+	inputBuffer.Signature = ACPI_EVAL_INPUT_BUFFER_SIGNATURE_EX;
+	status = RtlStringCchPrintfA(
+		inputBuffer.MethodName,
+		sizeof(inputBuffer.MethodName),
+		"TBMC"
+	);
+	if (!NT_SUCCESS(status)) {
+		return status;
+	}
+
+	WDFMEMORY outputMemory;
+	PACPI_EVAL_OUTPUT_BUFFER outputBuffer;
+	size_t outputArgumentBufferSize = 32;
+	size_t outputBufferSize = FIELD_OFFSET(ACPI_EVAL_OUTPUT_BUFFER, Argument) + outputArgumentBufferSize;
+
+	WDF_OBJECT_ATTRIBUTES attributes;
+	WDF_OBJECT_ATTRIBUTES_INIT(&attributes);
+	attributes.ParentObject = FxDevice;
+
+	status = WdfMemoryCreate(&attributes,
+		NonPagedPoolNx,
+		0,
+		outputBufferSize,
+		&outputMemory,
+		(PVOID*)&outputBuffer);
+	if (!NT_SUCCESS(status)) {
+		return status;
+	}
+
+	RtlZeroMemory(outputBuffer, outputBufferSize);
+
+	WDF_MEMORY_DESCRIPTOR inputMemDesc;
+	WDF_MEMORY_DESCRIPTOR outputMemDesc;
+	WDF_MEMORY_DESCRIPTOR_INIT_BUFFER(&inputMemDesc, &inputBuffer, (ULONG)sizeof(inputBuffer));
+	WDF_MEMORY_DESCRIPTOR_INIT_HANDLE(&outputMemDesc, outputMemory, NULL);
+
+	status = WdfIoTargetSendInternalIoctlSynchronously(
+		WdfDeviceGetIoTarget(FxDevice),
+		NULL,
+		IOCTL_ACPI_EVAL_METHOD_EX,
+		&inputMemDesc,
+		&outputMemDesc,
+		NULL,
+		NULL
+	);
+	if (!NT_SUCCESS(status)) {
+		goto Exit;
+	}
+
+	if (outputBuffer->Signature != ACPI_EVAL_OUTPUT_BUFFER_SIGNATURE) {
+		goto Exit;
+	}
+
+	if (outputBuffer->Count < 1) {
+		goto Exit;
+	}
+
+	PCROSSENSORS_CONTEXT pDevice = GetDeviceContext(FxDevice);
+	pDevice->TabletMode = (outputBuffer->Argument[0].Data[0] != 0);
+
+Exit:
+	if (outputMemory != WDF_NO_HANDLE) {
+		WdfObjectDelete(outputMemory);
+	}
+	return status;
+}
+
 void SensorWorkItem(
 	IN WDFWORKITEM WorkItem
 ) {
@@ -313,6 +389,20 @@ void SensorWorkItem(
 
 		size_t BytesWritten;
 		CrosSensorsProcessVendorReport(pDevice, &report, sizeof(report), &BytesWritten);
+	}
+
+	pDevice->callbackUpdateCnt++;
+	if (pDevice->callbackUpdateCnt > 10) {
+		pDevice->callbackUpdateCnt = 0;
+
+		if (NT_SUCCESS(GetDeviceTabletModeState(pDevice->FxDevice)) {
+			CSVivaldiSettingsArg newArg;
+			RtlZeroMemory(&newArg, sizeof(CSVivaldiSettingsArg));
+			newArg.argSz = sizeof(CSVivaldiSettingsArg);
+			newArg.settingsRequest = CSVivaldiRequestUpdateTabletMode;
+			newArg.args.tabletmode.tabletmode = (UINT8)pDevice->TabletMode;
+			ExNotifyCallback(pDevice->CSTabletModeCallback, &newArg, NULL);
+		}
 	}
 
 	WdfObjectDelete(WorkItem);
@@ -412,6 +502,37 @@ OnPrepareHardware(
 }
 
 NTSTATUS
+OnSelfManagedIoInit(
+	_In_
+	WDFDEVICE FxDevice
+) {
+	PCROSSENSORS_CONTEXT pDevice;
+	pDevice = GetDeviceContext(FxDevice);
+
+	NTSTATUS status = STATUS_SUCCESS;
+
+	// CS Keyboard Callback
+
+	UNICODE_STRING CSKeyboardSettingsCallbackAPI;
+	RtlInitUnicodeString(&CSKeyboardSettingsCallbackAPI, L"\\CallBack\\CsKeyboardSettingsCallbackAPI");
+
+	OBJECT_ATTRIBUTES attributes;
+	InitializeObjectAttributes(&attributes,
+		&CSKeyboardSettingsCallbackAPI,
+		OBJ_KERNEL_HANDLE | OBJ_OPENIF | OBJ_CASE_INSENSITIVE | OBJ_PERMANENT,
+		NULL,
+		NULL
+	);
+	status = ExCreateCallback(&pDevice->CSTabletModeCallback, &attributes, TRUE, TRUE);
+	if (!NT_SUCCESS(status)) {
+
+		return status;
+	}
+
+	return status;
+}
+
+NTSTATUS
 OnReleaseHardware(
 	_In_  WDFDEVICE     FxDevice,
 	_In_  WDFCMRESLIST  FxResourcesTranslated
@@ -436,6 +557,12 @@ OnReleaseHardware(
 	NTSTATUS status = STATUS_SUCCESS;
 
 	UNREFERENCED_PARAMETER(FxResourcesTranslated);
+
+	if (pDevice->CSTabletModeCallback) {
+		ObfDereferenceObject(pDevice->CSTabletModeCallback);
+		pDevice->CSTabletModeCallback = NULL;
+	}
+
 
 	return status;
 }
@@ -550,6 +677,7 @@ CrosSensorsEvtDeviceAdd(
 
 		pnpCallbacks.EvtDevicePrepareHardware = OnPrepareHardware;
 		pnpCallbacks.EvtDeviceReleaseHardware = OnReleaseHardware;
+		pnpCallbacks.EvtDeviceSelfManagedIoInit = OnSelfManagedIoInit;
 		pnpCallbacks.EvtDeviceD0Entry = OnD0Entry;
 		pnpCallbacks.EvtDeviceD0Exit = OnD0Exit;
 
@@ -672,7 +800,7 @@ CrosSensorsEvtDeviceAdd(
 	// Initialize DeviceMode
 	//
 
-	devContext->DeviceMode = DEVICE_MODE_MOUSE;
+	devContext->TabletMode = FALSE;
 
 	return status;
 }
