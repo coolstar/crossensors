@@ -467,6 +467,17 @@ OnD0Entry(
 	PCROSSENSORS_CONTEXT pDevice = GetDeviceContext(FxDevice);
 	NTSTATUS status = STATUS_SUCCESS;
 
+	ec_params_motion_sense params = { 0 };
+	ec_response_motion_sense resp;
+
+	params.cmd = MOTIONSENSE_CMD_FIFO_INT_ENABLE;
+	params.fifo_int_enable.enable = 0;
+
+	status = send_ec_command(pDevice, EC_CMD_MOTION_SENSE_CMD, 1, (UINT8*)&params, sizeof(params), (UINT8*)&resp, sizeof(resp));
+	if (!NT_SUCCESS(status)) {
+		return status;
+	}
+
 	WdfTimerStart(pDevice->Timer, WDF_REL_TIMEOUT_IN_MS(10));
 
 	return status;

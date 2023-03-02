@@ -42,6 +42,7 @@ crossensors.sys  = 1,,
 ; ones on XP and later.
 [Standard.NT$ARCH$]
 %CrosSensors.DeviceDesc%=CrosSensors_Device, ACPI\GOOG0006
+%CrosSlateSensors.DeviceDesc%=CrosSensors_Device, ACPI\GOOG000B
 
 [CrosSensors_Device.NT]
 CopyFiles=Drivers_Dir
@@ -75,4 +76,5 @@ SPSVCINST_ASSOCSERVICE= 0x00000002
 StdMfg                 = "CoolStar"
 DiskId1                = "CrosSensors Installation Disk #1"
 CrosSensors.DeviceDesc = "Chromebook EC Sensor Hub"
+CrosSlateSensors.DeviceDesc = "Pixel Slate Sensor Hub"
 CrosSensors.SVCDESC    = "CrosSensors Service"
