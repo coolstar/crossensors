@@ -395,7 +395,7 @@ void SensorWorkItem(
 	if (pDevice->callbackUpdateCnt > 10) {
 		pDevice->callbackUpdateCnt = 0;
 
-		if (NT_SUCCESS(GetDeviceTabletModeState(pDevice->FxDevice)) {
+		if (NT_SUCCESS(GetDeviceTabletModeState(pDevice->FxDevice))) {
 			CSVivaldiSettingsArg newArg;
 			RtlZeroMemory(&newArg, sizeof(CSVivaldiSettingsArg));
 			newArg.argSz = sizeof(CSVivaldiSettingsArg);
