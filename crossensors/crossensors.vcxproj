@@ -26,6 +26,7 @@
     <ClInclude Include="eccmds.h" />
     <ClInclude Include="hidcommon.h" />
     <ClInclude Include="HidSensorSpec.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="Trace.h" />
   </ItemGroup>
   <ItemGroup>
@@ -164,6 +165,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <FilesToPackage Include="$(TargetPath)" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="crossensors.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
