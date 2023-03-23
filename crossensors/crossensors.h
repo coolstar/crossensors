@@ -262,6 +262,7 @@ typedef enum {
 	CSVivaldiRequestUpdateTabletMode = 0x102
 } CSVivaldiRequest;
 
+#include <pshpack1.h>
 typedef struct CSVivaldiSettingsArg {
 	UINT32 argSz;
 	CSVivaldiRequest settingsRequest;
@@ -271,6 +272,7 @@ typedef struct CSVivaldiSettingsArg {
 		} tabletmode;
 	} args;
 } CSVivaldiSettingsArg, * PCSVivaldiSettingsArg;
+#include <poppack.h>
 
 DEFINE_GUID(GUID_CROSEC_INTERFACE_STANDARD_V2,
 	0xad8649fa, 0x7c71, 0x11ed, 0xb6, 0x3c, 0x00, 0x15, 0x5d, 0xa4, 0x49, 0xad);
