@@ -48,7 +48,7 @@ crossensors.sys  = 1,,
 CopyFiles=Drivers_Dir
 
 [CrosSensors_Device.NT.HW]
-AddReg=CrosSensors_AddReg
+AddReg=CrosSensors_AddReg, CrosSensors_AddReg.Configuration.AddReg
 
 [Drivers_Dir]
 crossensors.sys
@@ -57,6 +57,9 @@ crossensors.sys
 ; Set to 1 to connect the first interrupt resource found, 0 to leave disconnected
 HKR,Settings,"ConnectInterrupt",0x00010001,0
 HKR,,"UpperFilters",0x00010000,"mshidkmdf"
+
+[CrosSensors_AddReg.Configuration.AddReg]
+HKR,,"EnhancedPowerManagementEnabled",0x00010001,1
 
 ;-------------- Service installation
 [CrosSensors_Device.NT.Services]

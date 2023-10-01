@@ -290,6 +290,8 @@ typedef struct _CROSSENSORS_CONTEXT
 
 	WDFQUEUE ReportQueue;
 
+	WDFQUEUE IdleQueue;
+
 	BYTE TabletMode;
 	PCALLBACK_OBJECT CSTabletModeCallback;
 	INT callbackUpdateCnt;
@@ -311,6 +313,20 @@ typedef struct _CROSSENSORS_CONTEXT
 WDF_DECLARE_CONTEXT_TYPE_WITH_NAME(CROSSENSORS_CONTEXT, GetDeviceContext)
 
 //
+// Power Idle Workitem context
+// 
+typedef struct _IDLE_WORKITEM_CONTEXT
+{
+	// Handle to a WDF device object
+	WDFDEVICE FxDevice;
+
+	// Handle to a WDF request object
+	WDFREQUEST FxRequest;
+
+} IDLE_WORKITEM_CONTEXT, * PIDLE_WORKITEM_CONTEXT;
+WDF_DECLARE_CONTEXT_TYPE_WITH_NAME(IDLE_WORKITEM_CONTEXT, GetIdleWorkItemContext)
+
+//
 // Function definitions
 //
 
@@ -319,8 +335,6 @@ DRIVER_INITIALIZE DriverEntry;
 EVT_WDF_DRIVER_UNLOAD CrosSensorsDriverUnload;
 
 EVT_WDF_DRIVER_DEVICE_ADD CrosSensorsEvtDeviceAdd;
-
-EVT_WDFDEVICE_WDM_IRP_PREPROCESS CrosSensorsEvtWdmPreprocessMnQueryId;
 
 EVT_WDF_IO_QUEUE_IO_INTERNAL_DEVICE_CONTROL CrosSensorsEvtInternalDeviceControl;
 
@@ -385,6 +399,11 @@ PCHAR
 DbgHidInternalIoctlString(
 	IN ULONG        IoControlCode
 	);
+
+VOID
+CrosSensorsCompleteIdleIrp(
+	IN PCROSSENSORS_CONTEXT FxDeviceContext
+);
 
 //
 // Helper macros
