@@ -490,7 +490,12 @@ OnPrepareHardware(
 
 		status = send_ec_command(pDevice, EC_CMD_MOTION_SENSE_CMD, 1, (UINT8*)&params, sizeof(params), (UINT8*)&resp, sizeof(resp));
 		if (!NT_SUCCESS(status)) {
-			return status;
+			// Chrome EC motion sensor tables may contain reserved/empty
+			// slots. MOTIONSENSE_CMD_INFO on such a slot legitimately fails
+			// (e.g. EC_RES_INVALID_PARAM). Skip it and keep enumerating:
+			// aborting here fails EvtDevicePrepareHardware and leaves the
+			// whole Sensor Hub with Code 10 on those boards.
+			continue;
 		}
 		if (resp.info.type == MOTIONSENSE_TYPE_ACCEL &&
 			resp.info.location == MOTIONSENSE_LOC_LID) {
@@ -498,7 +503,10 @@ OnPrepareHardware(
 		}
 	}
 
-	return status;
+	// Do not propagate a status left over from a skipped slot. Boards with
+	// no lid accelerometer are still allowed to start (SensorWorkItem already
+	// guards on LidSensor != -1).
+	return STATUS_SUCCESS;
 }
 
 NTSTATUS
